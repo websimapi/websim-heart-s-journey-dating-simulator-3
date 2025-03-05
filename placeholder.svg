@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <rect width="400" height="300" fill="#f0f0f0"/>
+  <path d="M187.5,75 L237.5,75 L237.5,125 L187.5,125 Z" fill="#e0e0e0"/>
+  <path d="M187.5,175 L237.5,175 L237.5,225 L187.5,225 Z" fill="#e0e0e0"/>
+  <path d="M137.5,125 L187.5,125 L187.5,175 L137.5,175 Z" fill="#e0e0e0"/>
+  <path d="M237.5,125 L287.5,125 L287.5,175 L237.5,175 Z" fill="#e0e0e0"/>
+  <text x="200" y="160" font-family="Arial" font-size="24" text-anchor="middle" fill="#aaaaaa">Loading...</text>
+</svg>
+

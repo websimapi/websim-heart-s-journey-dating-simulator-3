@@ -1,0 +1,145 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart's Journey: Dating Simulator</title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="importmap">
+        {
+            "imports": {
+                "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="app">
+        <div class="game-container" :class="{'settings-open': settingsOpen}">
+            <!-- Loading Screen -->
+            <div v-if="gameState === 'loading'" class="screen loading-screen">
+                <div class="loading-content">
+                    <h1>Heart's Journey</h1>
+                    <div class="loading-bar">
+                        <div class="loading-progress" :style="{width: loadingProgress + '%'}"></div>
+                    </div>
+                    <p>{{ loadingMessage }}</p>
+                </div>
+            </div>
+
+            <!-- Main Menu Screen -->
+            <div v-else-if="gameState === 'mainMenu'" class="screen main-menu-screen">
+                <div class="menu-content">
+                    <h1 class="game-title">Heart's Journey</h1>
+                    <div class="menu-buttons">
+                        <button @click="startNewGame" class="btn btn-primary">New Game</button>
+                        <button @click="continueGame" class="btn btn-primary" :disabled="!hasSavedGame">Continue</button>
+                        <button @click="openSettings" class="btn btn-secondary">Settings</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Character Selection Screen -->
+            <div v-else-if="gameState === 'characterSelection'" class="screen character-selection-screen">
+                <h2>Choose Your Date</h2>
+                <div class="character-cards">
+                    <div v-for="character in characters" :key="character.id" class="character-card" @click="selectCharacter(character)">
+                        <div class="character-image-container">
+                            <img :src="character.portraitUrl || 'placeholder.svg'" :alt="character.name" class="character-image">
+                            <div v-if="!character.portraitUrl" class="loading-overlay">
+                                <div class="spinner"></div>
+                            </div>
+                        </div>
+                        <div class="character-info">
+                            <h3>{{ character.name }}</h3>
+                            <p>{{ character.shortBio }}</p>
+                        </div>
+                    </div>
+                </div>
+                <button @click="backToMainMenu" class="btn btn-back">Back</button>
+            </div>
+
+            <!-- Location Selection Screen -->
+            <div v-else-if="gameState === 'locationSelection'" class="screen location-selection-screen">
+                <h2>Choose Your Date Location</h2>
+                <div class="location-cards">
+                    <div v-for="location in locations" :key="location.id" class="location-card" @click="selectLocation(location)">
+                        <div class="location-image-container">
+                            <img :src="location.imageUrl || 'placeholder.svg'" :alt="location.name" class="location-image">
+                            <div v-if="!location.imageUrl" class="loading-overlay">
+                                <div class="spinner"></div>
+                            </div>
+                        </div>
+                        <div class="location-info">
+                            <h3>{{ location.name }}</h3>
+                            <p>{{ location.shortDescription }}</p>
+                        </div>
+                    </div>
+                </div>
+                <button @click="backToCharacterSelection" class="btn btn-back">Back</button>
+            </div>
+
+            <!-- Dating Simulation Screen -->
+            <div v-else-if="gameState === 'dating'" class="screen dating-screen">
+                <div class="date-background" :style="{ backgroundImage: `url(${currentLocation.imageUrl || 'placeholder.svg'})` }"></div>
+                <div class="character-portrait">
+                    <img :src="currentCharacter.portraitUrl || 'placeholder.svg'" :alt="currentCharacter.name">
+                </div>
+                <div class="dialogue-box">
+                    <div class="dialogue-header">
+                        <h3>{{ currentCharacter.name }}</h3>
+                    </div>
+                    <div class="dialogue-content">
+                        <p>{{ currentDialogue }}</p>
+                    </div>
+                    <div v-if="showChoices" class="dialogue-choices">
+                        <button v-for="(choice, index) in currentChoices" :key="index" @click="makeChoice(index)" class="choice-btn">
+                            {{ choice.text }}
+                        </button>
+                    </div>
+                    <div v-else class="dialogue-continue">
+                        <button @click="continueDialogue" class="btn btn-continue">Continue</button>
+                    </div>
+                </div>
+
+                <div class="game-controls">
+                    <button @click="openSettings" class="btn btn-icon settings-btn">
+                        <svg viewBox="0 0 24 24" width="24" height="24">
+                            <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Settings Overlay -->
+            <div v-if="settingsOpen" class="settings-overlay">
+                <div class="settings-panel">
+                    <h2>Settings</h2>
+                    <div class="settings-options">
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" v-model="settings.ttsEnabled">
+                                Text-to-Speech
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label>Speech Rate: {{ settings.speechRate }}</label>
+                            <input type="range" v-model="settings.speechRate" min="0.5" max="2" step="0.1">
+                        </div>
+                        <div class="setting-item">
+                            <label>Text Speed: {{ settings.textSpeed }}</label>
+                            <input type="range" v-model="settings.textSpeed" min="1" max="10" step="1">
+                        </div>
+                    </div>
+                    <div class="settings-buttons">
+                        <button @click="saveSettings" class="btn btn-primary">Save</button>
+                        <button @click="closeSettings" class="btn btn-secondary">Cancel</button>
+                        <button @click="returnToMainMenu" class="btn btn-danger">Main Menu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="app.js"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
